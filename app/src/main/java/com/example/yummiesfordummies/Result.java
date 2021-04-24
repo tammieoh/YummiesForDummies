@@ -4,11 +4,9 @@ import android.widget.ImageView;
 
 public class Result {
     String resultTitle;
-    String imageUrl;
 
-    public Result(String resultTitle, ImageView resultImage) {
+    public Result(String resultTitle) {
         this.resultTitle = resultTitle;
-        this.imageUrl = imageUrl;
     }
     public String getTitle() {
         return resultTitle; }
@@ -17,10 +15,10 @@ public class Result {
         this.resultTitle = resultTitle;
     }
 
-    public String getResultImage() {
-        return imageUrl;
-    }
-    public void setImage(ImageView resultImage) {
-        this.imageUrl = imageUrl;
-    }
+//    public String getResultImage() {
+//        return imageUrl;
+//    }
+//    public void setImage(ImageView resultImage) {
+//        this.imageUrl = imageUrl;
+//    }
 }

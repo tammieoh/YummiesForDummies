@@ -83,6 +83,7 @@ public class RecipeFragment extends Fragment {
                         ingredients.add(ingredient);
                         count++;
                     }
+
                     adapter = new IngredientAdapter(ingredients);
                     recyclerView.setAdapter(adapter);
                     System.out.println(adapter.getItemCount());

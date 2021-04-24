@@ -19,6 +19,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".ResultListActivity"/>
+        <activity android:name=".SelectedRecipeActivity" />
+        <activity android:name=".CategoryListActivity" />
+        <activity android:name=".GoogleSignInActivity" />
+        <activity android:name=".EmailPasswordActivity" />
     </application>
 
 </manifest>

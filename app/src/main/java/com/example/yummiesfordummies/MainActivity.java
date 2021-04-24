@@ -26,9 +26,12 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import cz.msebera.android.httpclient.Header;
 
-public class MainActivity extends AppCompatActivity implements IRecipeFragmentActivity{
+public class MainActivity extends AppCompatActivity implements IRecipeFragmentActivity, IResultFragmentActivity{
 
     private String base_url = "https://api.edamam.com/search?app_id=748f1c8c&app_key=d5e91a2728e63b8c0fa4dc6ff3e89e2&q=chicken";
 
@@ -52,9 +55,13 @@ public class MainActivity extends AppCompatActivity implements IRecipeFragmentAc
                 Log.d("tab", Integer.toString(tab.getPosition()));
                 if(tab.getPosition() == 0) {
                     RecipeFragment recipeFragment = new RecipeFragment();
-                    loadFragment(recipeFragment,  R.id.fragContainer_recipe);
+                    loadFragment(recipeFragment,  R.id.fragContainer_home);
 //                    HomeFragment homeFragment = new HomeFragment();
 //                    loadFragment(homeFragment);
+                }
+                else if(tab.getPosition() == 1) {
+                    ResultsFragment mainResults = new ResultsFragment();
+                    loadFragment(mainResults, R.id.fragContainer_home);
                 }
 //                else if(tab.getPosition() == 1) {
 //                    // set the header because of the api endpoint
@@ -201,7 +208,25 @@ public class MainActivity extends AppCompatActivity implements IRecipeFragmentAc
 
     @Override
     public String getLink() {
-
         return getString(R.string.random_recipe);
+    }
+
+    @Override
+    public List<Result> getCategories() {
+        ArrayList<Result> categories = new ArrayList<>();
+        categories.add(new Result("Food Type"));
+        categories.add(new Result("Meal Type"));
+        categories.add(new Result("Area/Location"));
+        return categories;
+    }
+
+    @Override
+    public String getLabel() {
+        return "";
+    }
+
+    @Override
+    public String getURL() {
+        return "";
     }
 }

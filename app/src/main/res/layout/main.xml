@@ -62,7 +62,7 @@
     </com.google.android.material.tabs.TabLayout>
 
     <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragContainer_recipe"
+        android:id="@+id/fragContainer_home"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"

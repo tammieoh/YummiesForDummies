@@ -8,4 +8,5 @@
     <string name="recipe_web">Click for Full Recipe</string>
     <string name="random_recipe">http://www.themealdb.com/api/json/v1/1/random.php</string>
     <string name="youtube_tutorial">Youtube Tutorial</string>
+    <string name="results">We found %1$s results.</string>
 </resources>
