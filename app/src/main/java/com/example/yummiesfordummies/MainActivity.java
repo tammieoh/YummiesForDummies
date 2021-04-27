@@ -142,6 +142,16 @@ public class MainActivity extends AppCompatActivity implements IRecipeFragmentAc
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
+                if(tab.getPosition() == 0) {
+                    RecipeFragment recipeFragment = new RecipeFragment();
+                    loadFragment(recipeFragment,  R.id.fragContainer_home);
+//                    HomeFragment homeFragment = new HomeFragment();
+//                    loadFragment(homeFragment);
+                }
+                else if(tab.getPosition() == 1) {
+                    ResultsFragment mainResults = new ResultsFragment();
+                    loadFragment(mainResults, R.id.fragContainer_home);
+                }
 //                if(tab.getPosition() == 0) {
 //                    // set the header because of the api endpoint
 //                    client.addHeader("Accept", "application/json");
