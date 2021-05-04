@@ -5,11 +5,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.SearchView;
+
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -91,34 +92,34 @@ public class ResultsFragment extends Fragment {
 
 
         // this is a filter feature for searchView, i don't think this will be necessary
-//        searchView.setOnQueryTextListener(new androidx.appcompat.widget.SearchView.OnQueryTextListener() {
-//            @Override
-//            public boolean onQueryTextSubmit(String query) {
-//                return false;
-//            }
-//
-//            @Override
-//            public boolean onQueryTextChange(String newText) {
-//                filter(newText);
-//                return true;
-//            }
-//        });
+        searchView.setOnQueryTextListener(new androidx.appcompat.widget.SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filter(newText);
+                return true;
+            }
+        });
 //
         return view;
     }
 
     // helper method for filtering
-//    public void filter(String text){
-//        ArrayList<Beer> temp = new ArrayList();
-//        for(Beer d: beers){
-//            //or use .equal(text) with you want equal match
-//            //use .toLowerCase() for better matches
-//            if(d.getName().toLowerCase().contains(text)){
-//                temp.add(d);
-//            }
-//        }
-//        //update recyclerview
-//        adapter.updateList(temp);
-//        total_results.setText(getString(R.string.results, Integer.toString(adapter.getItemCount())));
-//    }
+    public void filter(String text){
+        ArrayList<Result> temp = new ArrayList();
+        for(Result r: results){
+            //or use .equal(text) with you want equal match
+            //use .toLowerCase() for better matches
+            if(r.getTitle().toLowerCase().contains(text.toLowerCase())){
+                temp.add(r);
+            }
+        }
+        //update recyclerview
+        adapter.updateList(temp);
+        numResults.setText(getString(R.string.results, Integer.toString(adapter.getItemCount())));
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.yummiesfordummies;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -20,6 +21,11 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.squareup.picasso.Picasso;
@@ -35,14 +41,19 @@ import cz.msebera.android.httpclient.Header;
 public class RecipeFragment extends Fragment {
     private View view;
     private TextView title, category, area, instructions;
-    private ImageView imageView_recipe;
+    private ImageView imageView_recipe, imageView_favorite;
     private Button button_youtube;
     private List<Ingredient> ingredients = new ArrayList<>();
+    private List<String> favorites = new ArrayList<String>();
+    private boolean isFavorited = false;
     private IngredientAdapter adapter;
     private RecyclerView recyclerView;
     private static AsyncHttpClient client = new AsyncHttpClient();
     private SharedPreferences sharedPreferences;
     private int count = 1;
+    private DatabaseReference database;
+    private JSONObject favoritesJson;
+    private String currentRecipe;
 
 //    private SharedViewModel viewModel;
 
@@ -56,18 +67,63 @@ public class RecipeFragment extends Fragment {
         area = view.findViewById(R.id.textView_area);
         instructions = view.findViewById(R.id.textView_instructions);
         imageView_recipe = view.findViewById(R.id.imageView_recipe);
+        imageView_favorite = view.findViewById(R.id.imageView_favorite);
         button_youtube = view.findViewById(R.id.button_youtube);
 
+        database = FirebaseDatabase.getInstance().getReference("users");
+
         IRecipeFragmentActivity recipeFragmentActivity = (IRecipeFragmentActivity) getActivity();
+        sharedPreferences = this.getActivity().getSharedPreferences("Settings", Context.MODE_PRIVATE);
+
+        String favorite_file = "file:///android_asset/images/favorite1.png";
+        String unfavorite_file = "file:///android_asset/images/unfavorite1.png";
 
         String url = recipeFragmentActivity.getLink();
+
         Log.d("url", url);
+
+        client.setEnableRedirects(true, true, true);
+
         client.get(url, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 try {
-
                     JSONObject json = new JSONObject(new String(responseBody));
+
+                    String favorite_file = "file:///android_asset/images/favorite1.png";
+                    String unfavorite_file = "file:///android_asset/images/unfavorite1.png";
+                    currentRecipe = json.getJSONArray("meals").getJSONObject(0).get("strMeal").toString();
+
+                    if(database.child(sharedPreferences.getString("userID", "")).child("favorites").child(currentRecipe).equals(true)) {
+                        Picasso.get().load(favorite_file).into(imageView_favorite);
+                    }
+                    else {
+                        Picasso.get().load(unfavorite_file).into(imageView_favorite);
+                    }
+
+                    imageView_favorite.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            try {
+                                if (favorites.contains(json.getJSONArray("meals").getJSONObject(0).get("strMeal").toString())) {
+                                    favorites.remove(json.getJSONArray("meals").getJSONObject(0).get("strMeal").toString());
+                                    Picasso.get().load(unfavorite_file).into(imageView_favorite);
+                                    database.child(sharedPreferences.getString("userID", "")).child("favorites")
+                                            .child(json.getJSONArray("meals").getJSONObject(0).get("strMeal").toString()).removeValue();
+
+                                }
+                                else {
+                                    favorites.add(json.getJSONArray("meals").getJSONObject(0).get("strMeal").toString());
+                                    Picasso.get().load(favorite_file).into(imageView_favorite);
+                                    database.child(sharedPreferences.getString("userID", "")).child("favorites")
+                                            .child(json.getJSONArray("meals").getJSONObject(0).get("strMeal").toString()).setValue(true);;
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+
                     title.setText(json.getJSONArray("meals").getJSONObject(0).get("strMeal").toString());
                     category.setText("Category: " + json.getJSONArray("meals").getJSONObject(0).get("strCategory").toString());
                     area.setText("Area: " + json.getJSONArray("meals").getJSONObject(0).get("strArea").toString());
@@ -89,6 +145,8 @@ public class RecipeFragment extends Fragment {
                     System.out.println(adapter.getItemCount());
                     Log.d("ingredient count", Integer.toString(adapter.getItemCount()));
                     recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+
 
                     // clicking button to open youtube link
                     button_youtube.setOnClickListener(new View.OnClickListener() {
@@ -114,60 +172,6 @@ public class RecipeFragment extends Fragment {
             }
         });
 
-
-//        viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
-
-//        sharedPreferences = getContext().getSharedPreferences("Settings", Context.MODE_PRIVATE);
-
-
-//        // set the header because of the api endpoint
-//        client.addHeader("Accept", "application/json");
-//        // send a get request to the api url
-//        client.get(url, new AsyncHttpResponseHandler() {
-//
-//            //            @SuppressLint("SetTextI18n")
-//            @Override
-//            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-//                try {
-//                    JSONObject json = new JSONObject(new String(responseBody));
-//                    name.setText(json.get("name").toString());
-////                    String file = "file:///android_asset/images/RickandMorty_Logo.png";
-//                    Picasso.get().load(json.get("image").toString()).into(imageView);
-//
-//                    status.setText(getString(R.string.status_textView, json.get("status").toString()));
-//                    species.setText(getString(R.string.species_textView, json.get("species").toString()));
-//                    gender.setText(getString(R.string.gender_textView, json.get("gender").toString()));
-//                    origin.setText(getString(R.string.origin_textView, json.getJSONObject("origin").get("name").toString()));
-//                    location.setText(getString(R.string.location_textView, json.getJSONObject("location").get("name").toString()));
-//
-////                    ArrayList<String> episodes = new ArrayList<>();
-//                    String link = "";
-//                    String episode_String = getResources().getString(R.string.episodes_textView) + " ";
-//                    // 42
-//                    for(int i = 0; i < json.getJSONArray(("episode")).length(); i++) {
-//                        link = json.getJSONArray("episode").get(i).toString();
-//                        if(i == json.getJSONArray(("episode")).length() - 1) {
-//                            episode_String += link.substring(40);
-//                        }
-//                        else {
-//                            episode_String += link.substring(40) + ", ";
-//                        }
-//
-//                    }
-//                    episodes.setText(episode_String);
-//
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-//                Log.d("url", url);
-//                Toast.makeText(getActivity(), "Error in GET REQUEST", Toast.LENGTH_SHORT).show();
-//            }
-//
-//        });
         return view;
     }
 }
