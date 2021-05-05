@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,10 +21,12 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.squareup.picasso.Picasso;
 
 public class EmailPasswordActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private DatabaseReference database;
+    private ImageView imageView;
 //    private DatabaseReference userRef;
     private Button button_create;
     private Button button_login;
@@ -36,6 +39,7 @@ public class EmailPasswordActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emailpassword);
 
+        imageView = findViewById(R.id.imageView_main);
         button_create = findViewById(R.id.button_create);
         button_login = findViewById(R.id.button_login);
         editText_email = findViewById(R.id.editText_email);
@@ -48,7 +52,8 @@ public class EmailPasswordActivity extends AppCompatActivity {
 
         sharedPreferences = getSharedPreferences("Settings", Context.MODE_PRIVATE);
 
-
+        String main_image = "file:///android_asset/images/chef.jpeg";
+        Picasso.get().load(main_image).into(imageView);
 
         button_login.setOnClickListener(new View.OnClickListener() {
             @Override

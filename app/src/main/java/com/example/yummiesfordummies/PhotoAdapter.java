@@ -44,6 +44,11 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder>{
             return photos.size();
             }
 
+    public void updateList(List<String> list){
+        photos = list;
+        notifyDataSetChanged();
+    }
+
     // make an onclick listener with the photo, and then create a new activity with the photo enlarged?
     public class ViewHolder extends RecyclerView.ViewHolder{
         ImageView imageView;

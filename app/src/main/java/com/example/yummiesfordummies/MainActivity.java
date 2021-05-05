@@ -67,7 +67,8 @@ public class MainActivity extends AppCompatActivity implements IRecipeFragmentAc
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
                 if(tab.getPosition() == 0) {
-                    onResume();
+                    RecipeFragment recipeFragment = new RecipeFragment();
+                    loadFragment(recipeFragment,  R.id.fragContainer_home);
                 }
                 else if(tab.getPosition() == 1) {
                     ResultsFragment mainResults = new ResultsFragment();
@@ -90,12 +91,12 @@ public class MainActivity extends AppCompatActivity implements IRecipeFragmentAc
         fragmentTransaction.commit();
     }
 
-    @Override
-    public void onResume(){
-        super.onResume();
-        RecipeFragment recipeFragment = new RecipeFragment();
-        loadFragment(recipeFragment,  R.id.fragContainer_home);
-    }
+//    @Override
+//    public void onResume(){
+//        super.onResume();
+//        RecipeFragment recipeFragment = new RecipeFragment();
+//        loadFragment(recipeFragment,  R.id.fragContainer_home);
+//    }
 
     @Override
     public String getLink() {

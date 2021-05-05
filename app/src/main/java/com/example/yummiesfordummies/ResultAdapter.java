@@ -31,6 +31,7 @@ public class ResultAdapter extends RecyclerView.Adapter<ResultAdapter.ViewHolder
     private DatabaseReference database;
     private SharedPreferences sharedPreferences;
 
+
     public ResultAdapter(List<Result> results, String label) {
         this.results = results;
         this.label = label;
@@ -86,6 +87,9 @@ public class ResultAdapter extends RecyclerView.Adapter<ResultAdapter.ViewHolder
                 intent.putExtra("category", result.getTitle());
                 intent.putExtra("label", label);
                 v.getContext().startActivity(intent);
+            }
+            else if(v.getContext() instanceof FavoritesActivity) {
+                Log.d("clicked", "do nothing");
             }
             else {
                 Intent intent = new Intent(v.getContext(), SelectedRecipeActivity.class);

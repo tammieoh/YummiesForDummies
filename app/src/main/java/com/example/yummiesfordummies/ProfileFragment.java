@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -24,6 +25,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.database.DataSnapshot;
@@ -49,9 +51,12 @@ public class ProfileFragment  extends Fragment {
     private TextView textView_username;
     private RecyclerView recyclerView;
     private ImageView imageView_camera;
+    private Button favorites_button;
     private List<String> photoUrls = new ArrayList<>();
     private SharedPreferences sharedPreferences;
     private DatabaseReference database;
+    private File photoFile = null;
+    private PhotoAdapter adapter = new PhotoAdapter(photoUrls);
     static final int REQUEST_IMAGE_CAPTURE = 1;
     String currentPhotoPath;
 
@@ -61,6 +66,7 @@ public class ProfileFragment  extends Fragment {
         view = inflater.inflate(R.layout.fragment_profile, container, false);
         textView_username = view.findViewById(R.id.textView_username);
         imageView_camera = view.findViewById(R.id.imageView_camera);
+        favorites_button = view.findViewById(R.id.button_favorites);
         recyclerView = view.findViewById(R.id.recyclerView_photos);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(view.getContext(), 3);
         recyclerView.setLayoutManager(gridLayoutManager);
@@ -68,9 +74,30 @@ public class ProfileFragment  extends Fragment {
         database = FirebaseDatabase.getInstance().getReference("users");
         sharedPreferences = this.getActivity().getSharedPreferences("Settings", Context.MODE_PRIVATE);
 
-        textView_username.setText(database.child(sharedPreferences.getString("userID", "")).child("username").getKey());
+        database.child(sharedPreferences.getString("userID", "")).child("username").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                textView_username.setText(snapshot.getValue().toString().toUpperCase());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+
+//        textView_username.setText(database.child(sharedPreferences.getString("userID", "")).child("username").toString());
         String camera_icon = "file:///android_asset/images/camera.png";
         Picasso.get().load(camera_icon).into(imageView_camera);
+
+        favorites_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(v.getContext(), FavoritesActivity.class);
+                startActivity(intent);
+            }
+        });
 
         imageView_camera.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,25 +107,16 @@ public class ProfileFragment  extends Fragment {
             }
         });
 
-        //    @Override
-        //    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        //        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-        //            Bundle extras = data.getExtras();
-        //            Bitmap imageBitmap = (Bitmap) extras.get("data");
-        ////            imageView.setImageBitmap(imageBitmap);
-        //        }
-        //    }
-
         database.child("photos").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()){
                     String data = snapshot.getKey().toString();
                     photoUrls.add(data);
                     // jpg_0502, jpg_0503
                 }
                 Log.d("photos", photoUrls.toString());
+                adapter.updateList(photoUrls);
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
@@ -107,8 +125,9 @@ public class ProfileFragment  extends Fragment {
         });
 
         // probably need to call all the photos and figure out how to store the links into an array list
-        PhotoAdapter adapter = new PhotoAdapter(photoUrls);
+        adapter = new PhotoAdapter(photoUrls);
         recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         return view;
     }
@@ -118,11 +137,12 @@ public class ProfileFragment  extends Fragment {
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
             // Create the File where the photo should go
-            File photoFile = null;
+//            File photoFile = null;
             try {
                 photoFile = createImageFile();
             } catch (IOException ex) {
                 // Error occurred while creating the File
+                Log.d("Profile Fragment", "can't create image file");
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
@@ -130,32 +150,8 @@ public class ProfileFragment  extends Fragment {
                 Uri photoURI = FileProvider.getUriForFile(getContext(),
                         "com.example.android.fileprovider",
                         photoFile);
-
-//                ContentValues values = new ContentValues();
-//                values.put(MediaStore.Images.Media.TITLE, "Image File name");
-//                Uri photoURI = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-//                // store the file in the database
-
-//                        .addValueEventListener(new ValueEventListener() {
-//                    @Override
-//                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-////                        for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-////                            String data = snapshot.getKey().toString();
-////                            photoUrls.add(data);
-////                            // jpg_0502, jpg_0503
-////                        }
-//                        if (dataSnapshot.child(sharedPreferences.getString("userID", "")).child("photos").child(photoURI.toString()) == null) {
-//                            database.child(sharedPreferences.getString("userID", "")).child("photos").push().setValue(photoURI.toString());
-//                        }
-//                    }
-
-//                    @Override
-//                    public void onCancelled(@NonNull DatabaseError error) {
-//
-//                    }
-//                });
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                takePictureIntent.putExtra("photoURL", photoURI); // where the camera is going to save the photo
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE); // launches camera app
             }
         }
     }
@@ -164,25 +160,38 @@ public class ProfileFragment  extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             if(data.getData() != null) {
-                try {
-                    ParcelFileDescriptor parcelFileDescriptor = getContext().getContentResolver().openFileDescriptor(data.getData(), "r");
-                    FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-                    database.child(sharedPreferences.getString("userID", "")).child("photos").push().setValue(fileDescriptor.toString());
-                    parcelFileDescriptor.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            else {
-                database.child(sharedPreferences.getString("userID", "")).child("photos").push().setValue(data.getExtras().get("data").toString());
-            }
+//                ParcelFileDescriptor parcelFileDescriptor = getContext().getContentResolver().openFileDescriptor(data.getData(), "r");
+//                FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+                database.child(sharedPreferences.getString("userID", "")).child("photos").push().setValue(photoFile.toString());
+                database.child("photos").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            String data = snapshot.getKey().toString();
+                            photoUrls.add(data);
+                            // jpg_0502, jpg_0503
+                        }
+                        Log.d("photos", photoUrls.toString());
+                        adapter.updateList(photoUrls);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+//                parcelFileDescriptor.close();
+
+//            }
+//            else {
+//                database.child(sharedPreferences.getString("userID", "")).child("photos").push().setValue(data.getExtras().get("data").toString());
+//            }
 //            Bundle extras = data.getExtras();
 //            Log.d("extras", extras.get("data").toString());
 //            database.child(sharedPreferences.getString("userID", "")).child("photos").push().setValue(extras.get("data").toString());
 //            Bitmap imageBitmap = (Bitmap) extras.get("data");
 //            imageView.setImageBitmap(imageBitmap);
+            }
         }
     }
 

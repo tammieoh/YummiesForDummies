@@ -44,9 +44,11 @@ public class RecipeFragment extends Fragment {
     private ImageView imageView_recipe, imageView_favorite;
     private Button button_youtube;
     private List<Ingredient> ingredients = new ArrayList<>();
-    private List<String> favorites = new ArrayList<String>();
+    private List<String> favorites = new ArrayList<>();
     private boolean isFavorited = false;
     private IngredientAdapter adapter;
+    private FavoriteAdapter faveAdapter;
+//    private ResultAdapter resultAdapter;
     private RecyclerView recyclerView;
     private static AsyncHttpClient client = new AsyncHttpClient();
     private SharedPreferences sharedPreferences;
@@ -101,6 +103,9 @@ public class RecipeFragment extends Fragment {
                         Picasso.get().load(unfavorite_file).into(imageView_favorite);
                     }
 
+//                    faveAdapter = new FavoriteAdapter(favorites);
+//                    recyclerView_favorite.setAdapter(adapter);
+
                     imageView_favorite.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -110,13 +115,14 @@ public class RecipeFragment extends Fragment {
                                     Picasso.get().load(unfavorite_file).into(imageView_favorite);
                                     database.child(sharedPreferences.getString("userID", "")).child("favorites")
                                             .child(json.getJSONArray("meals").getJSONObject(0).get("strMeal").toString()).removeValue();
-
+//                                    faveAdapter.updateList(favorites);
                                 }
                                 else {
                                     favorites.add(json.getJSONArray("meals").getJSONObject(0).get("strMeal").toString());
                                     Picasso.get().load(favorite_file).into(imageView_favorite);
                                     database.child(sharedPreferences.getString("userID", "")).child("favorites")
                                             .child(json.getJSONArray("meals").getJSONObject(0).get("strMeal").toString()).setValue(true);;
+//                                    faveAdapter.updateList(favorites);
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
