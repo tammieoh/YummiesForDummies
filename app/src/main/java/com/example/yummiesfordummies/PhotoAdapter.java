@@ -16,6 +16,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 
 public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder>{
@@ -31,18 +34,26 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder>{
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             Context context = parent.getContext();
             LayoutInflater inflater = LayoutInflater.from(context);
-            View ingredientView = inflater.inflate(R.layout.item_photos, parent, false);
+            View photoView = inflater.inflate(R.layout.item_photos, parent, false);
     //        View locationView = mInflater.inflate(R.layout.item_locations, parent, false);
-            ViewHolder viewHolder = new ViewHolder(ingredientView);
+            ViewHolder viewHolder = new ViewHolder(photoView);
             return viewHolder;
             }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             String photoUrl = photos.get(position);
-            Bitmap bitmap;
             Uri uri = Uri.fromFile(new File((photoUrl)));
-            bitmap = BitmapFactory.decodeFile(uri.getPath());
+            Bitmap bitmap = BitmapFactory.decodeFile(uri.getPath());
+//            InputStream is = null;
+//            try {
+//                is = new URL(photoUrl).openStream();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            Bitmap bitmap = BitmapFactory.decodeStream(is);
+
+//            bitmap = BitmapFactory.decodeFile(new File(photoUrl).getAbsolutePath());
 //                    bitmap = cropAndScale(bitmap, 300); // if you mind scaling
             holder.imageView.setImageBitmap(bitmap);
 //            Picasso.get().load(photoUrl).into(holder.imageView);
