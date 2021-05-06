@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -28,6 +29,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -45,7 +48,7 @@ import java.util.Date;
 import java.util.List;
 
 public class ProfileFragment  extends Fragment {
-    private static final int RESULT_OK = 0;
+    private static final int RESULT_OK = -1;
     //    private static final int RESULT_OK = 0;
     private View view;
     private TextView textView_username;
@@ -56,9 +59,10 @@ public class ProfileFragment  extends Fragment {
     private SharedPreferences sharedPreferences;
     private DatabaseReference database;
     private File photoFile = null;
-    private PhotoAdapter adapter = new PhotoAdapter(photoUrls);
+    private PhotoAdapter adapter;
     static final int REQUEST_IMAGE_CAPTURE = 1;
     String currentPhotoPath;
+//    private ImageView imageView_tester;
 
     @Nullable
     @Override
@@ -68,11 +72,16 @@ public class ProfileFragment  extends Fragment {
         imageView_camera = view.findViewById(R.id.imageView_camera);
         favorites_button = view.findViewById(R.id.button_favorites);
         recyclerView = view.findViewById(R.id.recyclerView_photos);
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(view.getContext(), 3);
-        recyclerView.setLayoutManager(gridLayoutManager);
+//        imageView_tester = view.findViewById(R.id.imageView_tester);
+//        GridLayoutManager gridLayoutManager = new GridLayoutManager(view.getContext(), 3);
+//        recyclerView.setLayoutManager(gridLayoutManager);
 
         database = FirebaseDatabase.getInstance().getReference("users");
         sharedPreferences = this.getActivity().getSharedPreferences("Settings", Context.MODE_PRIVATE);
+
+//        adapter = new PhotoAdapter(photoUrls);
+//        recyclerView.setAdapter(adapter);
+//        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         database.child(sharedPreferences.getString("userID", "")).child("username").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -85,7 +94,42 @@ public class ProfileFragment  extends Fragment {
 
             }
         });
+        database.child(sharedPreferences.getString("userID", "")).child("photos").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if (!task.isSuccessful()) {
+                    Log.e("firebase", "Error getting data", task.getException());
+                }
+                else {
+                    Log.d("firebase", String.valueOf(task.getResult().getValue()));
+                    for(DataSnapshot snapshot : task.getResult().getChildren()) {
+                        String data = snapshot.getValue().toString();
+                        photoUrls.add(data);
+                    }
+                    adapter = new PhotoAdapter(photoUrls);
+                    recyclerView.setAdapter(adapter);
+                    recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                    Log.d("getchild", "adapter attached");
+                }
+//                adapter = new PhotoAdapter(photoUrls);
+//                recyclerView.setAdapter(adapter);
+//                recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+            }
 
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+//                    String data = snapshot.getValue().toString();
+//                    photoUrls.add(data);
+//                    // jpg_0502, jpg_0503
+//                }
+//                Log.d("photos", photoUrls.toString());
+//                adapter = new PhotoAdapter(photoUrls);
+//                recyclerView.setAdapter(adapter);
+//                recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+//            }
+
+        });
 
 //        textView_username.setText(database.child(sharedPreferences.getString("userID", "")).child("username").toString());
         String camera_icon = "file:///android_asset/images/camera.png";
@@ -107,27 +151,11 @@ public class ProfileFragment  extends Fragment {
             }
         });
 
-        database.child("photos").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    String data = snapshot.getKey().toString();
-                    photoUrls.add(data);
-                    // jpg_0502, jpg_0503
-                }
-                Log.d("photos", photoUrls.toString());
-                adapter.updateList(photoUrls);
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
 
         // probably need to call all the photos and figure out how to store the links into an array list
-        adapter = new PhotoAdapter(photoUrls);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+//        adapter = new PhotoAdapter(photoUrls);
+//        recyclerView.setAdapter(adapter);
+//        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         return view;
     }
@@ -150,7 +178,7 @@ public class ProfileFragment  extends Fragment {
                 Uri photoURI = FileProvider.getUriForFile(getContext(),
                         "com.example.android.fileprovider",
                         photoFile);
-                takePictureIntent.putExtra("photoURL", photoURI); // where the camera is going to save the photo
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI); // where the camera is going to save the photo
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE); // launches camera app
             }
         }
@@ -159,27 +187,10 @@ public class ProfileFragment  extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            if(data.getData() != null) {
+//            if(data.getData() != null) {
 //                ParcelFileDescriptor parcelFileDescriptor = getContext().getContentResolver().openFileDescriptor(data.getData(), "r");
 //                FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-                database.child(sharedPreferences.getString("userID", "")).child("photos").push().setValue(photoFile.toString());
-                database.child("photos").addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            String data = snapshot.getKey().toString();
-                            photoUrls.add(data);
-                            // jpg_0502, jpg_0503
-                        }
-                        Log.d("photos", photoUrls.toString());
-                        adapter.updateList(photoUrls);
-                    }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-
-                    }
-                });
 //                parcelFileDescriptor.close();
 
 //            }
@@ -191,8 +202,35 @@ public class ProfileFragment  extends Fragment {
 //            database.child(sharedPreferences.getString("userID", "")).child("photos").push().setValue(extras.get("data").toString());
 //            Bitmap imageBitmap = (Bitmap) extras.get("data");
 //            imageView.setImageBitmap(imageBitmap);
-            }
+
+            Bitmap bitmap;
+            Uri uri = Uri.fromFile(new File((currentPhotoPath)));
+            bitmap = BitmapFactory.decodeFile(uri.getEncodedPath());
+//                    bitmap = cropAndScale(bitmap, 300); // if you mind scaling
+//            imageView_tester.setImageBitmap(bitmap);
+            database.child(sharedPreferences.getString("userID", "")).child("photos").push().setValue(currentPhotoPath);
+            database.child("photos").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        String data = snapshot.getKey();
+                        photoUrls.add(data);
+                        // jpg_0502, jpg_0503
+                    }
+                    Log.d("photos", photoUrls.toString());
+                    adapter.updateList(photoUrls);
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragContainer_home, new ProfileFragment())
+                            .commit();
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
         }
+//        }
     }
 
     private File createImageFile() throws IOException {

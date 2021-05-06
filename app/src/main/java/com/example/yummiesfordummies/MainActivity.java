@@ -67,8 +67,11 @@ public class MainActivity extends AppCompatActivity implements IRecipeFragmentAc
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
                 if(tab.getPosition() == 0) {
-                    RecipeFragment recipeFragment = new RecipeFragment();
-                    loadFragment(recipeFragment,  R.id.fragContainer_home);
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragContainer_home, new RecipeFragment())
+                            .commit();
+//                    RecipeFragment recipeFragment = new RecipeFragment();
+//                    loadFragment(recipeFragment,  R.id.fragContainer_home);
                 }
                 else if(tab.getPosition() == 1) {
                     ResultsFragment mainResults = new ResultsFragment();
